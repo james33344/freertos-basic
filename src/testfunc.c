@@ -6,7 +6,7 @@
 
 int fib(int number){
 	if(number>40 || number <0){
-		fio_printf(2, "Input error, see man page.\n");
+		fio_printf(2, "Input error, see man page.\n\r");
 		return -1;		
 	}
 
@@ -19,7 +19,7 @@ int fib(int number){
 		sum = result + previous;
 		previous = result;
 		result = sum;
-		fio_printf(1, "Fibonacci %d is %d.\n",i , sum);
+		fio_printf(1, "Fibonacci %d is %d.\n\r",i , sum);
 	}
 	return 1;
 }
