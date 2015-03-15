@@ -9,6 +9,8 @@
 #include "task.h"
 #include "host.h"
 
+#include "testfunc.h"
+
 typedef struct {
 	const char *name;
 	cmdfunc *fptr;
@@ -166,24 +168,41 @@ void test_command(int n, char *argv[]) {
 
     fio_printf(1, "\r\n");
     
-    handle = host_action(SYS_SYSTEM, "mkdir -p output");
-    handle = host_action(SYS_SYSTEM, "touch output/syslog");
+	if(n==1){
+	    handle = host_action(SYS_SYSTEM, "mkdir -p output");
+	    handle = host_action(SYS_SYSTEM, "touch output/syslog");
 
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
-    if(handle == -1) {
-        fio_printf(1, "Open file error!\n\r");
-        return;
-    }
+		handle = host_action(SYS_OPEN, "output/syslog", 8);
+		if(handle == -1) {
+			fio_printf(1, "Open file error!\n\r");
+		    return;
+		}
 
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
-    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
-    if(error != 0) {
-        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
-        host_action(SYS_CLOSE, handle);
-        return;
-    }
+		char *buffer = "Test host_write function which can write data to output/syslog\n";
+		error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
+		if(error != 0) {
+			fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
+			host_action(SYS_CLOSE, handle);
+			return;
+		}
 
-    host_action(SYS_CLOSE, handle);
+		host_action(SYS_CLOSE, handle);
+	}
+	else{
+		int len = strlen(argv[1]);
+		if(len==2 && argv[1][0]<58 && 47<argv[1][0] && argv[1][1]<58 && 47<argv[1][1]){
+			int num = ((int)(argv[1][0]-'0'))*10 + ((int)(argv[1][1]-'0'));
+			fib(num);
+		}
+		else if(len==1 && argv[1][0]<58 && 47<argv[1][0]){
+			int num = ((int)(argv[1][0]-'0'));
+			fib(num);
+		}
+		else{		
+			fio_printf(2, "argument error!\n\r");
+		}
+	}
+
 }
 
 void _command(int n, char *argv[]){
