@@ -41,6 +41,7 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
+	MKCL(new, "create new task."),
 	MKCL(, ""),
 };
 
