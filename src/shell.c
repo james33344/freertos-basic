@@ -26,7 +26,9 @@ void help_command(int, char **);
 void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
+void new_command(int, char **);
 void _command(int, char **);
+
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -202,6 +204,11 @@ void test_command(int n, char *argv[]) {
 			fio_printf(2, "argument error!\n\r");
 		}
 	}
+
+}
+
+void new_command(int n, char *argv[]){
+
 
 }
 
