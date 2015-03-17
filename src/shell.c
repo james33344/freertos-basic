@@ -208,8 +208,18 @@ void test_command(int n, char *argv[]) {
 
 }
 
+void test_new_task(){
+	while(1);
+}
+
 void new_command(int n, char *argv[]){
 
+    fio_printf(1, "\r\n");
+	if(n==1){
+		xTaskCreate(test_new_task,(signed portCHAR* )"test_task",
+												128, NULL, 0, NULL);
+		fio_printf(1, "Testing task create success.\n\r");
+	}
 
 }
 
