@@ -29,8 +29,10 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
     char buf[16 * 1024];
     struct dirent * ent;
     DIR * rec_dirp;
-    uint32_t cur_hash = hash_djb2((const uint8_t *) curpath, hash_init);
-    uint32_t size, w, hash,hash_path;
+//    uint32_t cur_hash = hash_djb2((const uint8_t *) curpath, hash_init);
+	uint32_t cur_hash = hash_init;
+	
+	uint32_t size, w, hash,hash_path;
     uint8_t b;
     FILE * infile;
 
@@ -71,10 +73,6 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
-            b = (hash_path >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
-            b = (hash_path >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
-            b = (hash_path >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
-            b = (hash_path >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
             fwrite(ent->d_name,strlen(ent->d_name),1,outfile);
             b = 0;fwrite(&b,1,1,outfile);
             size = size - strlen(ent->d_name) - 1;
@@ -84,6 +82,19 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
                 fwrite(buf, 1, w, outfile);
                 size -= w;
             }
+            b = (hash_path >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+			size = strlen(curpath);
+			if(!strcmp("",curpath))size++;
+            b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+            fwrite(curpath,size,1,outfile);
+			
+			
             fclose(infile);
         }
     }
