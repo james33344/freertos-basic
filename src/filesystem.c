@@ -1,6 +1,7 @@
 #include "osdebug.h"
 #include "filesystem.h"
 #include "fio.h"
+#include "clib.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -64,6 +65,7 @@ int fs_open(const char * path, int flags, int mode) {
 }
 
 static int root_opendir(){
+	int fd = fs_opendir("/romfs");
     return OPENDIR_NOTFOUNDFS;        
 }
 
