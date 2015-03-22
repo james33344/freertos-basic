@@ -53,6 +53,7 @@ OBJ := $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 DEP = $(OBJ:.o=.o.d)
 DAT =
  
+
 MAKDIR = mk
 MAK = $(wildcard $(MAKDIR)/*.mk)
 
@@ -69,7 +70,7 @@ $(OUTDIR)/$(TARGET).lst: $(OUTDIR)/$(TARGET).elf
 	@echo "    LIST    "$@
 	@$(CROSS_COMPILE)objdump -S $< > $@
 
-$(OUTDIR)/$(TARGET).elf: $(OBJ) $(DAT)
+$(OUTDIR)/$(TARGET).elf: fib.o $(OBJ) $(DAT) 
 	@echo "    LD      "$@
 	@echo "    MAP     "$(OUTDIR)/$(TARGET).map
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -Wl,-Map=$(OUTDIR)/$(TARGET).map -o $@ $^
@@ -84,8 +85,14 @@ $(OUTDIR)/%.o: %.s
 	@echo "    CC      "$@
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
 
+fib.o: fib.s
+	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
+	
+
 clean:
 	rm -rf $(OUTDIR) $(TMPDIR)
+flash:
+	st-flash write $(OUTDIR)/main.bin 0x8000000
 
 -include $(DEP)
 

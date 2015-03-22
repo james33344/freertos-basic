@@ -3,6 +3,13 @@
 #include "clib.h"
 #include "fio.h"
 #include "FreeRTOS.h"
+#include "timers.h"
+extern int fibonacci(int);
+static int count = 0;
+
+void fib_timer(xTimerHandle pxTimer){
+	count++;
+}
 
 int fib(int number){
 	if(number>40 || number <0){
@@ -10,17 +17,20 @@ int fib(int number){
 		return -1;		
 	}
 
-	int previous = -1;
-	int result = 1;
-	int sum = 0;
-	int i = 0;
+	int result = 0;
+/*	xTimerHandle t;
+	t = xTimerCreate((const signed char*)"timer",
+						1,
+						pdTRUE,
+						NULL,
+						fib_timer
+						);	
 
-	for(i=0; i<=number; i++){
-		sum = result + previous;
-		previous = result;
-		result = sum;
-		fio_printf(1, "Fibonacci %d is %d.\n\r",i , sum);
-	}
+	xTimerStart(t,0);*/
+	result = fibonacci(number);
+//	xTimerStop(t,0);
+	fio_printf(1,"The fibonacii sequence %d is %d. Exec ticks is %d\n\r",number,result,count);
+	
 	return 1;
 }
 
