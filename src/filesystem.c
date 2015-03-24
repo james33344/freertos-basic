@@ -68,15 +68,15 @@ int fs_open(const char * path, int flags, int mode) {
 }
 
 static int root_opendir(){
-	fs_opendir("/romfs");
+	fs_opendir("/");
     return OPENDIR_NOTFOUNDFS;        
 }
 
 int fs_opendir(const char * path){
     const char * slash;
     uint32_t hash;
-    
-    if ( path[0] == '\0' || (path[0] == '/' && path[1] == '\0') ){
+    if ( path[0] == '\0' ){
+	
         return root_opendir();
     }
     
@@ -84,16 +84,17 @@ int fs_opendir(const char * path){
         path++;
     
     slash = strchr(path, '/');
-    if (!slash)
+    if (!slash && path)
         slash = path + strlen(path);
 
-    hash = hash_djb2((const uint8_t *) path, slash - path);
+    hash = hash_djb2((const uint8_t *) "romfs", -1);
     
-    if(*(slash) == '\0'){
-        path = "";
-    }else{
+    if(*(slash) != '\0'){
         path = slash;
     }
+	else{
+		path--;
+	}
     
     for (int i = 0; i < MAX_FS; i++) {
         if (fss[i].hash == hash)

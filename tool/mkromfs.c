@@ -24,7 +24,7 @@ void usage(const char * binname) {
     exit(-1);
 }
 
-void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * prefix) {
+void processdir(DIR * dirp, char * curpath, FILE * outfile, const char * prefix) {
     char fullpath[1024];
     char buf[16 * 1024];
     struct dirent * ent;
@@ -37,7 +37,6 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
 
     while ((ent = readdir(dirp))) {
         strcpy(fullpath, prefix);
-        strcat(fullpath, "/");
         strcat(fullpath, curpath);
         strcat(fullpath, ent->d_name);
     #ifdef _WIN32
@@ -70,7 +69,6 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             b = (hash_path >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash_path >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
 			size = strlen(curpath);
-			if(!strcmp("",curpath))size++;
             b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
@@ -84,7 +82,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
 			
             strcat(fullpath, "/");
             rec_dirp = opendir(fullpath);
-            processdir(rec_dirp, fullpath + strlen(prefix) + 1, outfile, prefix);
+            processdir(rec_dirp, fullpath + strlen(prefix), outfile, prefix);
             closedir(rec_dirp);
         } else {
             hash = hash_djb2((const uint8_t *) ent->d_name, cur_hash);
@@ -114,12 +112,16 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
                 fwrite(buf, 1, w, outfile);
                 size -= w;
             }
+			size = strlen(curpath);
+			if(size>1){
+				size--;
+				curpath[size] = '\0';
+				hash_path = hash_djb2((const uint8_t *) curpath, cur_hash);
+			}
             b = (hash_path >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash_path >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash_path >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash_path >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
-			size = strlen(curpath);
-			if(!strcmp("",curpath))size++;
             b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
@@ -176,7 +178,7 @@ int main(int argc, char ** argv) {
         exit(-1);
     }
 
-    processdir(dirp, "", outfile, dirname);
+    processdir(dirp, "/", outfile, dirname);
     fwrite(&z, 1, 8, outfile);
     if (outname)
         fclose(outfile);
