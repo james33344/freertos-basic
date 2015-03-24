@@ -51,10 +51,13 @@ int fs_open(const char * path, int flags, int mode) {
     slash = strchr(path, '/');
     
     if (!slash)
-        return -2;
+		slash = path + strlen(path); 
 
-    hash = hash_djb2((const uint8_t *) path, slash - path);
-    path = slash + 1;
+    hash = hash_djb2((const uint8_t *) "romfs", -1);
+
+    if(*(slash) != '\0'){
+        path = slash + 1 ;
+    }
 
     for (i = 0; i < MAX_FS; i++) {
         if (fss[i].hash == hash)
