@@ -71,9 +71,9 @@ void ls_command(int n, char *argv[]){
     int dir;
 
     fio_printf(1,"\r\n"); 
-    if(n == 0){
+    if(n == 1){
         dir = fs_opendir("");
-    }else if(n == 1){
+    }else if(n == 2){
         dir = fs_opendir(argv[1]);
         //if(dir == )
     }else{
