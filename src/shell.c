@@ -8,6 +8,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "host.h"
+#include "timers.h"
 
 #include "testfunc.h"
 
@@ -67,8 +68,9 @@ int parse_command(char *str, char *argv[]){
 }
 
 void ls_command(int n, char *argv[]){
-    fio_printf(1,"\r\n"); 
     int dir;
+
+    fio_printf(1,"\r\n"); 
     if(n == 0){
         dir = fs_opendir("");
     }else if(n == 1){
@@ -79,6 +81,8 @@ void ls_command(int n, char *argv[]){
         return;
     }
 (void)dir;   // Use dir
+
+	return ;
 }
 
 int filedump(const char *filename){
@@ -213,12 +217,17 @@ void test_new_task(){
 }
 
 void new_command(int n, char *argv[]){
-
+//	static int task_count = 1;
     fio_printf(1, "\r\n");
 	if(n==1){
-		xTaskCreate(test_new_task,(signed portCHAR* )"test_task",
-												128, NULL, 0, NULL);
+		xTaskCreate(test_new_task,
+					(signed portCHAR* )"test_task",
+						256, NULL,
+		//				(void*)&task_count, 
+						1|portPRIVILEGE_BIT, 
+						NULL);
 		fio_printf(1, "Testing task create success.\n\r");
+//		vTaskStartScheduler();
 	}
 
 }

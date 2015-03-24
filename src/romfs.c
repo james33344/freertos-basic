@@ -7,6 +7,7 @@
 #include "romfs.h"
 #include "osdebug.h"
 #include "hash-djb2.h"
+#include "clib.h"
 
 struct romfs_fds_t {
     const uint8_t * file;
@@ -64,16 +65,21 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
     return offset;
 }
 
-const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
+const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len, int mode) {
     const uint8_t * meta = romfs;
 	uint32_t size = get_unaligned(meta + 4);
-
-    for (; get_unaligned(meta) && get_unaligned(meta + 4); size=get_unaligned(meta + 4), meta += size + get_unaligned(meta + 12 + size) + 16) {
+	uint32_t size_r;
+	if(mode){
+		meta += size + 8;
+	}
+    for (size_r=get_unaligned(meta+4); get_unaligned(meta) && get_unaligned(meta + 4); size_r=get_unaligned(meta + 4), size = get_unaligned(meta + 12 + size_r), meta += size + size_r + 16) {
         if (get_unaligned(meta) == h) {
             if (len) {
                 *len = get_unaligned(meta + 4);
             }
-            return meta + 8;
+			if(mode)
+				return meta - size;
+            else return meta + 8;
         }
     }
 
@@ -86,12 +92,12 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     const uint8_t * file;
     int r = -1;
 
-    file = romfs_get_file_by_hash(romfs, h, NULL);
+    file = romfs_get_file_by_hash(romfs, h, NULL, 0);
 
     if (file) {
         r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
         if (r > 0) {
-            uint32_t size = get_unaligned(file - 4);
+            uint32_t size = get_unaligned(file - 8);
             const uint8_t *filestart = file;
             while(*filestart) ++filestart;
             ++filestart;
@@ -110,24 +116,34 @@ int romfs_open_dir(void * opaque, const char * path){
     const uint8_t * romfs = (const uint8_t *) opaque;
     const uint8_t * file;
     int r = -1;
-		
-    file = romfs_get_file_by_hash(romfs, h, NULL);
 
-    if (file) {
-        r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
-        if (r > 0) {
-            uint32_t size = get_unaligned(file - 8);
-            const uint8_t *filestart = file;
-            while(*filestart) ++filestart;
-            ++filestart;
-            size -= filestart - file;
-            romfs_fds[r].file = filestart;
-            romfs_fds[r].cursor = 0;
-            romfs_fds[r].size = size;
-            fio_set_opaque(r, romfs_fds + r);
-        }
-    }
+    file = romfs_get_file_by_hash(romfs, h, NULL, 1);
+    for(; file; file = romfs_get_file_by_hash(file, h, NULL, 1)){
 
+		r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
+		if (r > 0) {
+			int count;
+			char buf[128];
+			uint32_t size = get_unaligned(file - 4);
+			const uint8_t *file_name_end = file;
+            while(*file_name_end) ++file_name_end;
+			uint32_t size_r = file_name_end - file; 
+			romfs_fds[r].file = file;
+			romfs_fds[r].cursor = 0;
+			romfs_fds[r].size = size_r;
+			fio_set_opaque(r, romfs_fds + r);
+			file += get_unaligned(file + size + 4) + size + 8;
+			while((count=fio_read(r, buf, sizeof(buf)))>0){
+				fio_write(1, buf, count);
+			}
+  
+			fio_printf(1, "\r\n");
+  
+			fio_close(r);
+
+		}
+
+	}
 	return r;
 }
 
