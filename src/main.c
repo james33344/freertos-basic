@@ -1,4 +1,5 @@
 #define USE_STDPERIPH_DRIVER
+#define MOUNTPOINT "romfs"
 #include "stm32f10x.h"
 #include "stm32_p103.h"
 /* Scheduler includes. */
@@ -7,6 +8,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include <string.h>
+#include <stdio.h>
 
 /* Filesystem includes */
 #include "filesystem.h"
@@ -48,8 +50,8 @@ void USART2_IRQHandler()
 		char msg = USART_ReceiveData(USART2);
 
 		/* If there is an error when queueing the received byte, freeze! */
-		if(!xQueueSendToBackFromISR(serial_rx_queue, &msg, &xHigherPriorityTaskWoken))
-			while(1);
+		while(!xQueueSendToBackFromISR(serial_rx_queue, &msg, &xHigherPriorityTaskWoken));
+			
 	}
 	else {
 		/* Only transmit and receive interrupts should be enabled.
@@ -83,6 +85,7 @@ char recv_byte()
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 	char msg;
 	while(!xQueueReceive(serial_rx_queue, &msg, portMAX_DELAY));
+//fio_printf(2,"DD\n\r");
 	return msg;
 }
 void command_prompt(void *pvParameters)
@@ -90,7 +93,6 @@ void command_prompt(void *pvParameters)
 	char buf[128];
 	char *argv[20];
     char hint[] = USER_NAME "@" USER_NAME "-STM32:~$ ";
-
 	fio_printf(1, "\rWelcome to FreeRTOS Shell\r\n");
 	while(1){
                 fio_printf(1, "%s", hint);
@@ -156,8 +158,9 @@ int main()
 	fs_init();
 	fio_init();
 	
-	register_romfs("romfs", &_sromfs);
-	
+	register_romfs(MOUNTPOINT, &_sromfs);
+//	printf("romfs success\n\r");	
+
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);

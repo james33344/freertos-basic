@@ -6,6 +6,7 @@
 
 #define MAX_FS 16
 #define OPENFAIL (-1)
+#define MOUNTPOINT "romfs"
 
 #define OPENDIR_NOTFOUNDFS (-2)
 #define OPENDIR_NOTFOUND (-1)
