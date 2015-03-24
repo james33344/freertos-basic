@@ -31,7 +31,6 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
     DIR * rec_dirp;
 //    uint32_t cur_hash = hash_djb2((const uint8_t *) curpath, hash_init);
 	uint32_t cur_hash = hash_init;
-	
 	uint32_t size, w, hash,hash_path;
     uint8_t b;
     FILE * infile;
@@ -50,6 +49,39 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
                 continue;
             if (strcmp(ent->d_name, "..") == 0)
                 continue;
+            hash = hash_djb2((const uint8_t *) ent->d_name, cur_hash);
+            hash_path = hash_djb2((const uint8_t *) curpath, cur_hash);
+
+            b = (hash >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+            size = 1 + strlen(ent->d_name) + 1;
+            b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+            fwrite(ent->d_name,strlen(ent->d_name),1,outfile);
+            b = 0;fwrite(&b,1,1,outfile);
+            b = 1;fwrite(&b,1,1,outfile);
+
+            b = (hash_path >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (hash_path >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+			size = strlen(curpath);
+			if(!strcmp("",curpath))size++;
+            b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+            fwrite(curpath,size,1,outfile);
+			
+            if (strcmp(ent->d_name, ".") == 0)
+                continue;
+            if (strcmp(ent->d_name, "..") == 0)
+                continue;
+			
             strcat(fullpath, "/");
             rec_dirp = opendir(fullpath);
             processdir(rec_dirp, fullpath + strlen(prefix) + 1, outfile, prefix);
@@ -97,6 +129,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
 			
             fclose(infile);
         }
+		
     }
 }
 

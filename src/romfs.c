@@ -65,26 +65,39 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
     return offset;
 }
 
-const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len, int mode) {
+const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
     const uint8_t * meta = romfs;
 	uint32_t size = get_unaligned(meta + 4);
-	uint32_t size_r;
-	if(mode){
-		meta += size + 8;
-	}
-    for (size_r=get_unaligned(meta+4); get_unaligned(meta) && get_unaligned(meta + 4); size_r=get_unaligned(meta + 4), size = get_unaligned(meta + 12 + size_r), meta += size + size_r + 16) {
+
+    for (; get_unaligned(meta) && get_unaligned(meta + 4); size=get_unaligned(meta + 4), meta += get_unaligned(meta + 12 + size) + size + 16) {
         if (get_unaligned(meta) == h) {
             if (len) {
                 *len = get_unaligned(meta + 4);
             }
-			if(mode)
-				return meta - size;
-            else return meta + 8;
+            return meta + 8;
         }
     }
 
     return NULL;
 }
+
+const uint8_t * romfs_get_dir_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
+    const uint8_t * meta = romfs;
+	uint32_t size = get_unaligned(meta + 4);
+	uint32_t size_r;
+	meta += size + 8;
+    for (size_r=get_unaligned(meta+4); get_unaligned(meta) && get_unaligned(meta + 4); size_r=get_unaligned(meta + 4), size = get_unaligned(meta + 12 + size_r), meta += size + size_r + 16) {
+        if (get_unaligned(meta) == h) {
+            if (len) {
+                *len = get_unaligned(meta + 4);
+            }
+			return meta - size;
+        }
+    }
+
+    return NULL;
+}
+
 
 static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     uint32_t h = hash_djb2((const uint8_t *) path, -1);
@@ -92,12 +105,12 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     const uint8_t * file;
     int r = -1;
 
-    file = romfs_get_file_by_hash(romfs, h, NULL, 0);
+    file = romfs_get_file_by_hash(romfs, h, NULL);
 
     if (file) {
         r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
         if (r > 0) {
-            uint32_t size = get_unaligned(file - 8);
+            uint32_t size = get_unaligned(file - 4);
             const uint8_t *filestart = file;
             while(*filestart) ++filestart;
             ++filestart;
@@ -117,8 +130,8 @@ int romfs_open_dir(void * opaque, const char * path){
     const uint8_t * file;
     int r = -1;
 
-    file = romfs_get_file_by_hash(romfs, h, NULL, 1);
-    for(; file; file = romfs_get_file_by_hash(file, h, NULL, 1)){
+    file = romfs_get_dir_file_by_hash(romfs, h, NULL);
+    for(; file; file = romfs_get_dir_file_by_hash(file, h, NULL)){
 
 		r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
 		if (r > 0) {

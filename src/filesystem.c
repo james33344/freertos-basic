@@ -65,7 +65,7 @@ int fs_open(const char * path, int flags, int mode) {
 }
 
 static int root_opendir(){
-	int fd = fs_opendir("/romfs");
+	fs_opendir("/romfs");
     return OPENDIR_NOTFOUNDFS;        
 }
 
@@ -89,7 +89,7 @@ int fs_opendir(const char * path){
     if(*(slash) == '\0'){
         path = "";
     }else{
-        path = slash + 1;
+        path = slash;
     }
     
     for (int i = 0; i < MAX_FS; i++) {
