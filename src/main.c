@@ -19,6 +19,7 @@
 #include "shell.h"
 #include "host.h"
 
+#include "testfunc.h"
 /* _sromfs symbol can be found in main.ld linker script
  * it contains file system structure of test_romfs directory
  */
@@ -149,6 +150,15 @@ void system_logger(void *pvParameters)
     host_action(SYS_CLOSE, handle);
 }
 
+void test_fib(){
+
+	int i=3;
+	for(;i<44;i++)
+	fib(i);
+
+}
+
+
 int main()
 {
 	init_rs232();
@@ -174,6 +184,9 @@ int main()
 	            (signed portCHAR *) "CLI",
 	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
 
+	xTaskCreate(test_fib,
+	            (signed portCHAR *) "test_fib",
+	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 10 , NULL);
 #if 0
 	/* Create a task to record system log. */
 	xTaskCreate(system_logger,
