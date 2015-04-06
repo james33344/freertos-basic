@@ -29,7 +29,7 @@ int fib(int number){
 	int t;
 	char buf_echo[128] = "echo fibonacci ";
 	char* buf;
-	int result = 0;
+//	int result = 0;
 /*	xTimerHandle t;
 	t = xTimerCreate((const signed char*)"timer",
 						1,
@@ -39,16 +39,17 @@ int fib(int number){
 						);	
 	xTimerStart(t,0);*/
 	t = get_time();
-	result = fibonacci(number);
+/*	result =*/ fibonacci(number);
 	t = get_time() - t;
 	buf = itoa("0123456789",number,10);
 	strcat(buf_echo,buf);
 	strcat(buf_echo," takes time is: ");
 	buf = itoa("0123456789",t,10);
 	strcat(buf_echo,buf);
+
 //	xTimerStop(t,0);
 	host_action(SYS_SYSTEM, buf_echo);
-	fio_printf(1,"The fibonacii sequence %d is %d. Exec ticks is %d\n\r",number,result,t);
+//	fio_printf(1,"The fibonacii sequence %d is %d. Exec ticks is %d\n\r",number,result,t);
 	
 	return 1;
 }
