@@ -94,6 +94,30 @@ clean:
 flash:
 	st-flash write $(OUTDIR)/main.bin 0x8000000
 
+run: 
+	@echo " Debuggin..."
+	@$(CROSS_COMPILE)gdb $(OUTDIR)/main.bin \
+		-ex 'target remote :3333' \
+		-ex 'monitor reset halt' \
+		-ex 'load' \
+		-ex 'monitor arm semihosting enable' \
+		-ex 'continue'
+
+openocd:
+	openocd -f board/stm32f4discovery.cfg
+
+
+#openocd_flash:
+#	openocd \
+	-f board/stm32f429discovery.cfg \
+	-c "init" \
+	-c "reset init" \
+	-c "flash probe 0" \
+	-c "flash info 0" \
+	-c "flash write_image erase $(OUTDIR)/main.elf  0x08000000" \
+	-c "reset run" -c shutdown
+
+
 -include $(DEP)
 
 
