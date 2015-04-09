@@ -4,7 +4,7 @@ TARGET = main
 CROSS_COMPILE ?= arm-none-eabi-
 CC := $(CROSS_COMPILE)gcc
 CFLAGS = -fno-common -O0 \
-	 -std=c99 -pedantic \
+	 -std=c99 \
 	 -gdwarf-2 -ffreestanding -g3 \
 	 -mcpu=cortex-m3 -mthumb \
 	 -Wall -Werror \
@@ -17,10 +17,13 @@ PLAT = STM32F10x
 
 LIBDIR = .
 CODEBASE = freertos
-CMSIS_LIB = $(CODEBASE)/libraries/CMSIS/$(ARCH)
-STM32_LIB = $(CODEBASE)/libraries/STM32F10x_StdPeriph_Driver
+CMSIS_LIB2 = $(CODEBASE)/libraries/CMSIS/$(ARCH)
+CMSIS_LIB = $(CODEBASE)/libraries/CMSIS
+STM32_LIB2 = $(CODEBASE)/libraries/STM32F10x_StdPeriph_Driver
+CMSIS_LIB_DEVICE=$(CMSIS_LIB)/Device/ST/STM32F4xx
+STM32_LIB=$(CODEBASE)/libraries/STM32F4xx_StdPeriph_Driver
 
-CMSIS_PLAT_SRC = $(CMSIS_LIB)/DeviceSupport/$(VENDOR)/$(PLAT)
+CMSIS_PLAT_SRC = $(CMSIS_LIB2)/DeviceSupport/$(VENDOR)/$(PLAT)
 
 FREERTOS_SRC = $(CODEBASE)/libraries/FreeRTOS
 FREERTOS_INC = $(FREERTOS_SRC)/include/                                       
@@ -28,16 +31,21 @@ FREERTOS_PORT_INC = $(FREERTOS_SRC)/portable/GCC/ARM_$(ARCH)/
 
 OUTDIR = build
 SRCDIR = src\
-         $(CMSIS_LIB)/CoreSupport \
          $(STM32_LIB)/src \
-         $(CMSIS_PLAT_SRC) \
-	 $(FREERTOS_SRC)
+	 $(FREERTOS_SRC) 
+#         $(CMSIS_PLAT_SRC) 
+#         $(CMSIS_LIB2)/CoreSupport 
+#         $(STM32_LIB2)/src \
+
 INCDIR = include \
-         $(CMSIS_LIB)/CoreSupport \
+		 $(CMSIS_LIB)/Include \
          $(STM32_LIB)/inc \
-         $(CMSIS_PLAT_SRC) \
+		 $(CMSIS_LIB_DEVICE)/Include \
 	 $(FREERTOS_INC) \
-	 $(FREERTOS_PORT_INC)
+	 $(FREERTOS_PORT_INC) 
+#         $(CMSIS_LIB2)/CoreSupport \
+#         $(CMSIS_PLAT_SRC)
+ #        $(STM32_LIB2)/inc 
 INCLUDES = $(addprefix -I,$(INCDIR))
 DATDIR = data
 TOOLDIR = tool
@@ -48,7 +56,9 @@ SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
       $(wildcard $(addsuffix /*.s,$(SRCDIR))) \
       $(FREERTOS_SRC)/portable/MemMang/$(HEAP_IMPL).c \
       $(FREERTOS_SRC)/portable/GCC/ARM_CM3/port.c \
-      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f10x_md.s
+	  $(CMSIS_LIB_DEVICE)/Source/Templates/gcc_ride7/startup_stm32f429_439xx.s \
+      $(CMSIS_LIB_DEVICE)/Source/Templates/system_stm32f4xx.c
+#      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f10x_md.s
 OBJ := $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 DEP = $(OBJ:.o=.o.d)
 DAT =
@@ -85,12 +95,12 @@ $(OUTDIR)/%.o: %.s
 	@echo "    CC      "$@
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
 
-fib.o: fib.s
+fib.o: fib_r2.s 
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
 	
 
 clean:
-	rm -rf $(OUTDIR) $(TMPDIR)
+	rm -rf $(OUTDIR) $(TMPDIR) fib.o
 flash:
 	st-flash write $(OUTDIR)/main.bin 0x8000000
 
