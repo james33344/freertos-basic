@@ -241,7 +241,7 @@ void test_fib(){
 
 int main()
 {
-//rcc_set_frequency(SYSCLK_240_MHZ);
+//rcc_set_frequency(SYSCLK_42_MHZ);
 //	init_rs232();
 //	enable_rs232_interrupts();
 //	enable_rs232();
