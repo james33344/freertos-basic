@@ -231,7 +231,13 @@ void system_logger(void *pvParameters)
 }
 
 void test_fib(){
+#ifdef FIB_r
 	host_action(SYS_SYSTEM, "echo > plot_fib_r");
+#elif FIB_r2
+	host_action(SYS_SYSTEM, "echo > plot_fib_r2");
+#elif
+	host_action(SYS_SYSTEM, "echo > plot_fib");
+#endif
 	int i=2;
 	for(;i<44;i++)
 	fib(i);

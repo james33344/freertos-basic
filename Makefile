@@ -51,7 +51,7 @@ DATDIR = data
 TOOLDIR = tool
 TMPDiR = output
 
-FIBSRC = fib.s
+FIBSRC = fib_r2
 
 HEAP_IMPL = heap_ww
 SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
@@ -60,7 +60,7 @@ SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
       $(FREERTOS_SRC)/portable/GCC/ARM_CM3/port.c \
 	  $(CMSIS_LIB_DEVICE)/Source/Templates/gcc_ride7/startup_stm32f429_439xx.s \
       $(CMSIS_LIB_DEVICE)/Source/Templates/system_stm32f4xx.c \
-	  $(FIBSRC)
+	  $(FIBSRC).s
 #      fib_r.s \
 #	  fib_r2.s \
 #      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f10x_md.s
@@ -68,6 +68,7 @@ OBJ := $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 DEP = $(OBJ:.o=.o.d)
 DAT =
  
+CFLAGS += -D$(subst fib, FIB, $(FIBSRC))
 
 MAKDIR = mk
 MAK = $(wildcard $(MAKDIR)/*.mk)
@@ -120,7 +121,7 @@ rundbg:
 		-ex 'target remote :3333' \
 		-ex 'monitor reset halt' \
 		-ex 'load' \
-		-ex 'monitor arm semihosting enable' \
+		-ex 'monitor arm semihosting enable' 
 	@echo " Start to dgb!!"
 
 
