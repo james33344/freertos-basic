@@ -51,13 +51,18 @@ DATDIR = data
 TOOLDIR = tool
 TMPDiR = output
 
+FIBSRC = fib.s
+
 HEAP_IMPL = heap_ww
 SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
       $(wildcard $(addsuffix /*.s,$(SRCDIR))) \
       $(FREERTOS_SRC)/portable/MemMang/$(HEAP_IMPL).c \
       $(FREERTOS_SRC)/portable/GCC/ARM_CM3/port.c \
 	  $(CMSIS_LIB_DEVICE)/Source/Templates/gcc_ride7/startup_stm32f429_439xx.s \
-      $(CMSIS_LIB_DEVICE)/Source/Templates/system_stm32f4xx.c
+      $(CMSIS_LIB_DEVICE)/Source/Templates/system_stm32f4xx.c \
+	  $(FIBSRC)
+#      fib_r.s \
+#	  fib_r2.s \
 #      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f10x_md.s
 OBJ := $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 DEP = $(OBJ:.o=.o.d)
@@ -80,7 +85,7 @@ $(OUTDIR)/$(TARGET).lst: $(OUTDIR)/$(TARGET).elf
 	@echo "    LIST    "$@
 	@$(CROSS_COMPILE)objdump -S $< > $@
 
-$(OUTDIR)/$(TARGET).elf: fib.o $(OBJ) $(DAT) 
+$(OUTDIR)/$(TARGET).elf: $(OBJ) $(DAT) 
 	@echo "    LD      "$@
 	@echo "    MAP     "$(OUTDIR)/$(TARGET).map
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -Wl,-Map=$(OUTDIR)/$(TARGET).map -o $@ $^
@@ -95,12 +100,8 @@ $(OUTDIR)/%.o: %.s
 	@echo "    CC      "$@
 	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
 
-fib.o: fib_r2.s 
-	@$(CROSS_COMPILE)gcc $(CFLAGS) -MMD -MF $@.d -o $@ -c $(INCLUDES) $<
-	
-
 clean:
-	rm -rf $(OUTDIR) $(TMPDIR) fib.o
+	rm -rf $(OUTDIR) $(TMPDIR)
 flash:
 	st-flash write $(OUTDIR)/main.bin 0x8000000
 
@@ -112,6 +113,16 @@ run:
 		-ex 'load' \
 		-ex 'monitor arm semihosting enable' \
 		-ex 'continue'
+
+rundbg:
+	@echo " Debuggin..."
+	@$(CROSS_COMPILE)gdb $(OUTDIR)/main.elf \
+		-ex 'target remote :3333' \
+		-ex 'monitor reset halt' \
+		-ex 'load' \
+		-ex 'monitor arm semihosting enable' \
+	@echo " Start to dgb!!"
+
 
 openocd:
 	openocd -f board/stm32f4discovery.cfg
